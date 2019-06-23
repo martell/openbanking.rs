@@ -1,7 +1,11 @@
+use log::debug;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct Config {
+    pub openid_configuration: String,
+    pub financial_id: String,
     pub ssid: String,
     pub organisation_id: String,
     pub ssa: String,
@@ -17,14 +21,17 @@ pub struct Config {
     pub register_response: String,
 }
 
-pub fn read() -> Result<Config, Box<std::error::Error>> {
-    let reader = std::fs::File::open("keys/config/config_tls_client_auth_ps256.yml")?;
+impl Drop for Config {
+    fn drop(&mut self) {
+        println!("Config.drop");
+    }
+}
+
+pub fn read(path: &str) -> Result<Config, Box<std::error::Error>> {
+    let reader = std::fs::File::open(path)?;
 
     let config: Config = serde_yaml::from_reader(reader)?;
-    // println!("{:#?}", config);
-
-    // let _ = serde_yaml::to_string(&config).expect("error from to_string");
-    // println!("{:#?}", config_json);
+    debug!("config={:#?}", config);
 
     Ok(config)
 }

@@ -1,0 +1,44 @@
+{
+  "_id": "5cac92894c379621579ba38e",
+  "redirect_uris": [
+      "https://127.0.0.1:8443/conformancesuite/callback"
+  ],
+  "grant_types": [
+      "client_credentials",
+      "authorization_code"
+  ],
+  "response_types": [
+      "code",
+      "code id_token"
+  ],
+  "scopes": [
+      "openid",
+      "accounts",
+      "payments"
+  ],
+  "token_endpoint_auth_method": [
+      "client_secret_basic",
+      "tls_client_auth"
+  ],
+  "token_endpoint_auth_signing_alg": [
+      "none",
+      "HS256",
+      "RS256",
+      "PS256"
+  ],
+  "id_token_signed_response_alg": "none",
+  "request_object_signing_alg": [
+      "none",
+      "HS256",
+      "RS256",
+      "PS256"
+  ],
+  "strictlyFapiCompliant": false,
+  "tls_client_auth_subject_dn": "CN=REfZKo7zN2IeE0X2RFGTb4,OU=0015800001041RbAAI,O=OpenBanking,C=GB",
+  "jwks_uri": "https://keystore.openbankingtest.org.uk/0015800001041RbAAI/REfZKo7zN2IeE0X2RFGTb4.jwks",
+  "client_id": "3fc528cf-fc88-46c2-9315-a8cf8724075d",
+  "client_secret": "1223be1a-27aa-4e80-b22b-7caa66daa706",
+  "client_id_issued_at": 1554813577535,
+  "client_secret_expires_at": 0,
+  "bearer": "M2ZjNTI4Y2YtZmM4OC00NmMyLTkzMTUtYThjZjg3MjQwNzVkOjEyMjNiZTFhLTI3YWEtNGU4MC1iMjJiLTdjYWE2NmRhYTcwNg=="
+}

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>BanaIO - openbanking.rs</title>
+    <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway"> -->
+    <style>
+        html body {
+            font-family: Raleway, sans-serif;
+            background-color: white;
+        }
+
+        body {
+            /* font-family: "Helvetica Neue",Helvetica,Arial,sans-serif; */
+            font-size: 12px;
+            line-height: 1.42857143;
+            color: #333;
+            background-color: #fff;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        .main {
+            margin: auto;
+            padding: 25px;
+            max-width: 750px;
+            display: flex;
+            justify-content: flex-start;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            height: 100%;
+        }
+
+        h1 {
+            color: #212121;
+            font-size: 12vh;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            margin: .67em 0;
+        }
+
+        h2 {
+            color: #757575;
+            font-size: 3vmin;
+        }
+
+        .container {
+            border: 1px solid #333;
+            padding: 4px;
+            height: 100%;
+        }
+
+        .container>code {
+            word-break: break-word;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <h2>Params</h2>
+        <div class="container">
+            <code><span id="div-params"></span></code>
+        </div>
+        <h2>Body</h2>
+        <div class="container">
+            <code><span id="div-body"></span></code>
+        </div>
+        <h2>Response</h2>
+        <div class="container">
+            <code><span id="div-response"></span></code>
+        </div>
+    </div>
+    <script type="text/javascript">
+        // See: https://openid.net/specs/openid-connect-core-1_0.html#FragmentNotes
+        //
+        // Failure case:
+        // http://localhost:8080/openbanking/banaio/forgerock?error_description=JWT%20invalid.%20Expiration%20time%20incorrect.&state=5a6b0d7832a9fb4f80f1170a&error=invalid_request
+        //
+        // Success case:
+        // `location` contains something like:
+        // http://localhost:8080/openbanking/banaio/forgerock#code=a052c795-742d-415a-843f-8a4939d740d1&scope=openid%20accounts&id_token=eyJ0eXAiOiJKV1QiLCJraWQiOiJGb2w3SXBkS2VMWm16S3RDRWdpMUxEaFNJek09IiwiYWxnIjoiRVMyNTYifQ.eyJzdWIiOiJtYmFuYSIsImF1ZGl0VHJhY2tpbmdJZCI6IjY5YzZkZmUzLWM4MDEtNGRkMi05Mjc1LTRjNWVhNzdjZWY1NS0xMDMzMDgyIiwiaXNzIjoiaHR0cHM6Ly9tYXRscy5hcy5hc3BzcC5vYi5mb3JnZXJvY2suZmluYW5jaWFsL29hdXRoMi9vcGVuYmFua2luZyIsInRva2VuTmFtZSI6ImlkX3Rva2VuIiwibm9uY2UiOiI1YTZiMGQ3ODMyYTlmYjRmODBmMTE3MGEiLCJhY3IiOiJ1cm46b3BlbmJhbmtpbmc6cHNkMjpzY2EiLCJhdWQiOiI1NGY2NDMwOS00MzNkLTQ2MTAtOTVkMi02M2QyZjUyNTM0MTIiLCJjX2hhc2giOiIxbGt1SEFuaVJDZlZNS2xEc0pxTTNBIiwib3BlbmJhbmtpbmdfaW50ZW50X2lkIjoiQTY5MDA3Nzc1LTcwZGQtNGIyMi1iZmM1LTlkNTI0YTkxZjk4MCIsInNfaGFzaCI6ImZ0OWRrQTdTWXdlb2hlZXpjOGFHeEEiLCJhenAiOiI1NGY2NDMwOS00MzNkLTQ2MTAtOTVkMi02M2QyZjUyNTM0MTIiLCJhdXRoX3RpbWUiOjE1Mzk5NDM3NzUsInJlYWxtIjoiL29wZW5iYW5raW5nIiwiZXhwIjoxNTQwMDMwMTgxLCJ0b2tlblR5cGUiOiJKV1RUb2tlbiIsImlhdCI6MTUzOTk0Mzc4MX0.8bm69KPVQIuvcTlC-p0FGcplTV1LnmtacHybV2PTb2uEgMgrL3JNA0jpT2OYO73r3zPC41mNQlMDvVOUn78osQ&state=5a6b0d7832a9fb4f80f1170a
+        //
+        // 1. We convert this to a form and post the values received to the backend.
+        // 2. Forward the hash fragment to the backend so it continue in the authentication process.
+        // The next step would be to exchange the `code` for an `access_token`.
+        // 3. After exchanging `code` for `access_token` the accounts/payments request is done.
+
+        // First, parse the query string
+        const REGEX = /([^&=]+)=([^&]*)/g;
+        const BODY = location.hash !== '' ? location.hash.substring(1) : location.search.substring(1);
+
+        let params = {};
+        let match;
+        while (match = REGEX.exec(BODY)) {
+            params[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
+        }
+
+        console.log('location=', JSON.stringify(window.location));
+        console.log('body=', BODY);
+        console.log('params=', params);
+
+        // update ui
+        document.querySelector('#div-params').innerHTML = JSON.stringify(params);
+        document.querySelector('#div-body').innerHTML = JSON.stringify(BODY);
+
+        // And send the token over to the server
+        let req = new XMLHttpRequest();
+        // using POST so query isn't logged
+        req.open('POST', `http://${window.location.host}/api/conformancesuite/callback`, true);
+        req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+        req.onreadystatechange = function (e) {
+            if (req.readyState == 4) {
+                if (req.status == 200) {
+                    console.log('req=', req);
+
+                    // update ui
+                    document.querySelector('#div-response').innerHTML = req.response;
+
+                    // alert(`Open console log to see full output. status=${req.status}, response=${req.response}`);
+
+                    console.log('JSON.parse -> JSON.parse(req.response)=', JSON.parse(req.response));
+                    console.log('JSON.stringify -> JSON.stringify(JSON.parse(req.response))=', JSON.stringify(JSON.parse(req.response)));
+                } else if (req.status == 400) {
+                    // if the OAuth response is invalid, generate an error message
+                    alert('There was an error processing the token');
+                } else {
+                    alert('Something other than 200 was returned');
+                }
+            }
+        };
+
+        // req.send(BODY);
+        req.send(JSON.stringify(params));
+    </script>
+</body>
+
+</html>

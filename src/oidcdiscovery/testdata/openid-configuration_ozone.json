@@ -1,0 +1,67 @@
+{
+  "issuer": "https://modelobankauth2018.o3bank.co.uk:4101",
+  "claims_parameter_supported": true,
+  "claims_supported": [
+    "openbanking_intent_id"
+  ],
+  "grant_types_supported": [
+    "authorization_code",
+    "client_credentials"
+  ],
+  "response_types_supported": [
+    "code",
+    "code id_token"
+  ],
+  "request_parameter_supported": true,
+  "request_uri_parameter_supported": false,
+  "require_request_uri_registration": false,
+  "scopes_supported": [
+    "openid",
+    "accounts",
+    "payments",
+    "fundsconfirmations"
+  ],
+  "id_token_signing_alg_values_supported": [
+    "none",
+    "HS256",
+    "RS256",
+    "PS256"
+  ],
+  "request_object_signing_alg_values_supported": [
+    "none",
+    "HS256",
+    "RS256",
+    "PS256"
+  ],
+  "token_endpoint_auth_methods_supported": [
+    "client_secret_basic",
+    "client_secret_post",
+    "client_secret_jwt",
+    "private_key_jwt",
+    "tls_client_auth"
+  ],
+  "token_endpoint_auth_signing_alg_values_supported": [
+    "none",
+    "HS256",
+    "RS256",
+    "PS256"
+  ],
+  "userinfo_signing_alg_values_supported": [
+    "none"
+  ],
+  "claim_types_supported": [
+    "normal"
+  ],
+  "subject_types_supported": [
+    "public"
+  ],
+  "response_modes_supported": [
+    "form_post",
+    "fragment",
+    "query"
+  ],
+  "token_endpoint": "https://modelobank2018.o3bank.co.uk:4201/token",
+  "authorization_endpoint": "https://modelobankauth2018.o3bank.co.uk:4101/auth",
+  "registration_endpoint": "https://modelobank2018.o3bank.co.uk:4501/dynamic-client-registration/v3.1/register",
+  "jwks_uri": "https://keystore.openbankingtest.org.uk/0015800001041RHAAY/0015800001041RHAAY.jwks"
+}

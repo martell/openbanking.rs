@@ -1,74 +1,57 @@
-// #[macro_use]
-// extern crate log;
-extern crate dialoguer;
-extern crate term_size;
+// https://doc.rust-lang.org/rust-by-example/testing/dev_dependencies.html
+#[cfg(test)]
+#[macro_use]
+extern crate pretty_assertions;
 
+pub mod cli;
+pub mod config;
+pub mod oidcdiscovery;
+pub mod client;
+pub mod server;
+pub mod terminal_utils;
 
-use log::{error, info};
-use rand::{thread_rng, Rng};
-use std::time::Duration;
+// https://github.com/actix/examples/tree/master/hello-world
+use actix_web::{middleware, web, App, HttpServer};
 
-use dialoguer::{theme::ColorfulTheme, Select};
-
-mod client;
-mod config;
-mod oidcdiscovery;
-
-// https://github.com/ramosbugs/openidconnect-rs/blob/master/src/registration.rs
-
-// fn main() -> Result<(), std::io::Error> {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // std::env::set_var("RUST_LOG", "trace,actix_web=trace,actix_server=trace");
-    // std::env::set_var("RUST_LOG", "debug,actix_web=debug,actix_server=debug");
-    std::env::set_var("RUST_LOG", "info,actix_web=info,actix_server=info");
-    // std::env::set_var("RUST_BACKTRACE", "1");
-    std::env::set_var("RUST_BACKTRACE", "full");
+    // std::env::set_var("RUST_BACKTRACE", "full");
+    std::env::set_var("RUST_BACKTRACE", "1");
+    std::env::set_var("RUST_LOG", "trace");
+
+    let cli = cli::new();
+    println!("cli={:?}", cli);
+
+    let rust_log = match cli.log_level.as_str() {
+        "trace" | "debug" | "info" | "error" => format!(
+            "{log_level},actix_web={log_level},actix_server={log_level}",
+            log_level = cli.log_level
+        ),
+        _ => unreachable!(),
+    };
+    std::env::set_var("RUST_LOG", rust_log);
     env_logger::init();
 
-    if let Some((w, h)) = term_size::dimensions() {
-        info!("width={}, height: {}", w, h);
-    } else {
-        error!("Unable to get term size")
-    }
+    let app = || {
+        App::new()
+            // enable logger
+            .wrap(middleware::Logger::default())
+            .service(web::resource("/").route(web::get().to(server::authorise_callback)))
+            .service(web::resource("/hello").to(|| "Hello world!"))
+            .service(web::resource("/api/conformancesuite/callback").to(server::api_authorise_callback))
+            .service(web::resource("/conformancesuite/callback").to(server::authorise_callback))
+    };
+    let addr = "127.0.0.1:8080";
+    HttpServer::new(app)
+        .bind(addr)?
+        .system_exit()
+        .run();
 
-    // let selections = &[
-    //     "Ice Cream",
-    //     "Vanilla Cupcake",
-    //     "Chocolate Muffin",
-    //     "A Pile of sweet, sweet mustard",
-    // ];
+    std::process::exit(1);
 
-    // let selection = Select::with_theme(&ColorfulTheme::default())
-    //     .with_prompt("Pick your flavor")
-    //     .default(0)
-    //     .items(&selections[..])
-    //     .interact()
-    //     .unwrap();
-    // println!("Enjoy your {}!", selections[selection]);
-
-    // let pb = indicatif::ProgressBar::new(100);
-    // // pb.enable_steady_tick(200);
-
-    // let wait = Duration::from_millis(thread_rng().gen_range(10, 30));
-    // let child = std::thread::spawn(move || {
-    //     std::thread::sleep(wait);
-    //     std::thread::sleep(Duration::from_millis(750));
-    let config = config::read().expect("Couldn't config::read()");
-    // std::thread::sleep(wait);
-    // std::thread::sleep(Duration::from_millis(750));
+    let config = config::read(cli.config.as_str()).expect("Couldn't config::read()");
     oidcdiscovery::fetch(config).expect("Couldn't oidcdiscovery::fetch");
-    // });
-
-    // for _ in 0..100 {
-    //     std::thread::sleep(Duration::from_millis(25));
-    //     // pb.println(format!("[+] finished #{}", i));
-    //     pb.inc(1);
-    // }
-    // pb.finish_and_clear();
-
-    // child
-    //     .join()
-    //     .expect("Couldn't join on the associated thread");
 
     Ok(())
 }
+
+// https://github.com/ramosbugs/openidconnect-rs/blob/master/src/registration.rs
