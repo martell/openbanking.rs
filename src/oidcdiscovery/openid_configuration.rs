@@ -1,8 +1,6 @@
-extern crate reqwest;
+use serde;
 
-use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Default, Clone, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct OpenIDConfiguration {
     pub request_parameter_supported: bool,
@@ -38,20 +36,14 @@ pub struct OpenIDConfiguration {
     pub token_endpoint_auth_signing_alg_values_supported: Vec<String>,
 }
 
-// impl Drop for OpenIDConfiguration {
-//     fn drop(&mut self) {
-//         println!("OpenIDConfiguration.drop");
-//     }
-// }
-
 #[cfg(test)]
 mod tests {
-    // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
 
     #[test]
     fn test_deserialize() {
-        let openid_configuration_forgerock = include_str!("testdata/openid-configuration_forgerock.json");
+        let openid_configuration_forgerock =
+            include_str!("testdata/openid-configuration_forgerock.json");
         let openid_configuration_ozone = include_str!("testdata/openid-configuration_ozone.json");
         serde_json::from_str::<OpenIDConfiguration>(openid_configuration_forgerock).unwrap();
         serde_json::from_str::<OpenIDConfiguration>(openid_configuration_ozone).unwrap();

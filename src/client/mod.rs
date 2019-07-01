@@ -1,28 +1,22 @@
-extern crate chrono;
-extern crate reqwest;
-
-use chrono::{DateTime, Utc};
+use chrono;
 use log::{debug, info};
-use serde_json::json;
+use reqwest;
 use std::io::Read;
-
 use std::ops::Add;
+use url::Url;
 use uuid::Uuid;
 
-pub mod client_credentials;
+pub mod accounts;
 pub mod certs;
+pub mod claims;
+pub mod client_credentials;
 pub mod defaults;
+pub mod utils;
 
 pub struct OpenBankingClient {
     pub config: super::config::Config,
     pub client: reqwest::Client,
     pub openid_configuration: super::oidcdiscovery::openid_configuration::OpenIDConfiguration,
-}
-
-impl Drop for OpenBankingClient {
-    fn drop(&mut self) {
-        println!("OpenBankingClient.drop");
-    }
 }
 
 impl OpenBankingClient {
@@ -61,13 +55,14 @@ impl OpenBankingClient {
         })
     }
 
-    pub fn client_credentials(&mut self) -> Result<client_credentials::ClientCredentialsGrant, Box<std::error::Error>> {
+    pub fn client_credentials(
+        &mut self,
+    ) -> Result<client_credentials::ClientCredentialsGrant, Box<std::error::Error>> {
         // https://rust-lang-nursery.github.io/rust-cookbook/web/clients/apis.html
         let client_id = self.config.client_id.clone();
         let params = [
             ("grant_type", "client_credentials"),
-            ("scope", "payments accounts"),
-            // ("scope", "openid payments accounts fundsconfirmations")
+            ("scope", "accounts"),
             ("client_id", client_id.as_str()),
         ];
         debug!("params={:?}", params);
@@ -90,8 +85,8 @@ impl OpenBankingClient {
         // https://users.rust-lang.org/t/convert-std-time-systemtime-to-chrono-datetime-datetime/7684
         // let expires_in = std::time::Duration::from_secs(client_credentials_grant.expires_in);
         let expires_in = client_credentials_grant.expires_in;
-        let toi: DateTime<chrono::offset::Utc> = std::time::SystemTime::now().into();
-        let expiry: DateTime<chrono::offset::Utc> =
+        let toi: chrono::DateTime<chrono::offset::Utc> = std::time::SystemTime::now().into();
+        let expiry: chrono::DateTime<chrono::offset::Utc> =
             std::time::SystemTime::now().add(expires_in).into();
         info!("client_credentials_grant={:?}", client_credentials_grant);
         info!("expires_in={:?}", expires_in);
@@ -101,11 +96,13 @@ impl OpenBankingClient {
         Ok(client_credentials_grant)
     }
 
-    pub fn post_account_access_consents(&mut self) -> Result<(), Box<std::error::Error>> {
+    pub fn post_account_access_consents(
+        &mut self,
+    ) -> Result<accounts::OBReadConsentResponse1, Box<std::error::Error>> {
         let client_credentials_grant = self.client_credentials()?;
 
         // https://github.com/seanmonstar/reqwest/blob/master/examples/json_dynamic.rs
-        let body = json!({
+        let body = serde_json::json!({
             "Data": {
                 "Permissions": [
                     "ReadAccountsDetail",
@@ -152,7 +149,7 @@ impl OpenBankingClient {
             ("x-fapi-customer-ip-address", "104.25.212.99".to_string()),
             (
                 "x-fapi-customer-last-logged-time",
-                Utc::now().format("%a, %d %b %Y %T %Z").to_string(),
+                chrono::Utc::now().format("%a, %d %b %Y %T %Z").to_string(),
             ), // "Mon, 02 Jan 2006 15:04:05 MST"
             ("x-fapi-financial-id", self.config.financial_id.clone()),
             (
@@ -179,6 +176,43 @@ impl OpenBankingClient {
             .expect("post_account_access_consents: request.read_to_string() failed");
         info!("response={}", response);
 
-        Ok(())
+        let account_requests_response: accounts::OBReadConsentResponse1 =
+            serde_json::from_str(response.as_str())?;
+
+        Ok(account_requests_response)
+    }
+
+    pub fn post_account_access_consents_hybrid_flow(
+        &mut self,
+        account_requests_response: accounts::OBReadConsentResponse1,
+    ) -> Result<String, Box<std::error::Error>> {
+        let request = claims::JWT::new(
+            self.config.client_id.clone(),
+            self.config.kid.clone(),
+            self.openid_configuration.issuer.clone(),
+            self.config.request_object_signing_alg.clone(),
+            account_requests_response.data.consent_id,
+        )?;
+
+        let input = self.openid_configuration.authorization_endpoint.clone();
+        let iter = &[
+            ("request", request.as_str()),
+            ("response_type", "code id_token"),
+            ("client_id", self.config.client_id.as_str()),
+            ("state", "state_accounts"),
+            ("nonce", "5a6b0d7832a9fb4f80f1170a"),
+            ("scope", "openid accounts"),
+            (
+                "redirect_uri",
+                "https://127.0.0.1:8443/conformancesuite/callback",
+            ),
+        ];
+
+        // https://modelobankauth2018.o3bank.co.uk:4101/auth?client_id=3fc528cf-fc88-46c2-9315-a8cf8724075d&redirect_uri=https%3A%2F%2F127.0.0.1%3A8443%2Fconformancesuite%2Fcallback&request=eyJhbGciOiJQUzI1NiIsImtpZCI6IlF1RllCUkpuV2RJNl9OSEZnYW11WE5yNVIyMCIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwczovL21vZGVsb2JhbmthdXRoMjAxOC5vM2JhbmsuY28udWs6NDEwMSIsImNsYWltcyI6eyJpZF90b2tlbiI6eyJvcGVuYmFua2luZ19pbnRlbnRfaWQiOnsiZXNzZW50aWFsIjp0cnVlLCJ2YWx1ZSI6ImFhYy00MDhiMzlhNS1hOTYwLTQ2MWEtOWE3MC1iMjc2ZjFmOGYwYjcifX19LCJjbGllbnRfaWQiOiIzZmM1MjhjZi1mYzg4LTQ2YzItOTMxNS1hOGNmODcyNDA3NWQiLCJleHAiOjE1NjE5ODg3ODcsImlhdCI6MTU2MTk4Njk4NywiaXNzIjoiM2ZjNTI4Y2YtZmM4OC00NmMyLTkzMTUtYThjZjg3MjQwNzVkIiwianRpIjoiY2ZhNjQ3NjUtOWNlNS00NGNhLWE5MDctODc5M2VhZDRmYmVmIiwibm9uY2UiOiJjZmE2NDc2NS05Y2U1LTQ0Y2EtYTkwNy04NzkzZWFkNGZiZWYiLCJyZWRpcmVjdF91cmkiOiJodHRwczovLzEyNy4wLjAuMTo4NDQzL2NvbmZvcm1hbmNlc3VpdGUvY2FsbGJhY2siLCJyZXNwb25zZV90eXBlIjoiY29kZSBpZF90b2tlbiIsInNjb3BlIjoib3BlbmlkIGFjY291bnRzIiwic3RhdGUiOiJhY2NvdW50VG9rZW4wMDAyIiwic3ViIjoiM2ZjNTI4Y2YtZmM4OC00NmMyLTkzMTUtYThjZjg3MjQwNzVkIn0.d4CWmroLhicUOqAW3zU4ybdPPauWE5R-2ssDrF_-ujnyF8mKrSgg2McXLZJhMXrCLmTOmWyzKpe_0KMK2wnHixJqcHXt2XDZybet0GPJUcNRhz2eRkIWTCSrBPDvJC0YIOw1ggjrB2oxIhefClTt_HM0s_ohhvyRrbgpdRZN6NAaFCQ2-lglEE_Mm9Rc1FYIh4F8J8x0hEPH842bWc76PqpR2Wmt8rEydnrKLukEAjr3_4wuovBll_4VkiWWZiKaD9lu9wJou4t0I8rjAFI6ypYMeuCkvluP8euEKpVnFf8X57xQqvBuxeWE8j7PpGQoMrYY87oludHVBJSu3Ammgw&response_type=code+id_token&scope=openid+accounts&state=accountToken0002
+        let url = Url::parse_with_params(input.as_str(), iter)?;
+        info!("url={:?}", url);
+
+        // "https://modelobankauth2018.o3bank.co.uk:4101/auth?request=eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IlF1RllCUkpuV2RJNl9OSEZnYW11WE5yNVIyMCJ9.eyJpc3MiOiIzZmM1MjhjZi1mYzg4LTQ2YzItOTMxNS1hOGNmODcyNDA3NWQiLCJzdWIiOiIzZmM1MjhjZi1mYzg4LTQ2YzItOTMxNS1hOGNmODcyNDA3NWQiLCJhdWQiOiJodHRwczovL21vZGVsb2JhbmthdXRoMjAxOC5vM2JhbmsuY28udWs6NDEwMSIsImV4cCI6MTU2MTk5MTU1MywiaWF0IjoxNTYxOTg5ODEzLCJqdGkiOiI5M2JkYjczZS00Y2QyLTQ2YjMtOWIzZC1jNTZiMGQ3ZDllY2UiLCJzY29wZSI6Im9wZW5pZCBhY2NvdW50cyIsImNsYWltcyI6eyJpZF90b2tlbiI6eyJhY3IiOnsidmFsdWUiOiJ1cm46b3BlbmJhbmtpbmc6cHNkMjpzY2EiLCJlc3NlbnRpYWwiOnRydWV9LCJvcGVuYmFua2luZ19pbnRlbnRfaWQiOnsidmFsdWUiOiJhYWMtZjJlM2JhMTMtYWI5OC00OTExLWEyNzctMzgzMGM5YzQ3OGY1IiwiZXNzZW50aWFsIjp0cnVlfX0sInVzZXJpbmZvIjp7Im9wZW5iYW5raW5nX2ludGVudF9pZCI6eyJ2YWx1ZSI6ImFhYy1mMmUzYmExMy1hYjk4LTQ5MTEtYTI3Ny0zODMwYzljNDc4ZjUiLCJlc3NlbnRpYWwiOnRydWV9fX0sInJlZGlyZWN0X3VyaSI6Imh0dHBzOi8vMTI3LjAuMC4xOjg0NDMvY29uZm9ybWFuY2VzdWl0ZS9jYWxsYmFjayIsInN0YXRlIjoic3RhdGVfYWNjb3VudHMiLCJub25jZSI6IjVhNmIwZDc4MzJhOWZiNGY4MGYxMTcwYSIsImNsaWVudF9pZCI6IjNmYzUyOGNmLWZjODgtNDZjMi05MzE1LWE4Y2Y4NzI0MDc1ZCIsInJlc3BvbnNlX3R5cGUiOiJjb2RlIGlkX3Rva2VuIn0.bNY_6Z4sdNISIFPBcTwG3G3zXelUgU79P3Cd85qws0jcvGkZS518JuxgretNmtCAecn5KBDTWrJnCxPJesH_JRjY-_SJMVrI_chrvFLxI3oW_pVB0HfKj26hvNVyy9YOPtTW5xH9R3b3kJZHi9wbGNTugp3mXkPkAa80p0TBW1uZVVOr25SKs6hpOJRX4u24k4gzktJ3WvcH7vzN4IPjUDrX_XhCJ_RITRMKGmGxjplGYpojDTTU0ekZFfviLe46o75LXSzBpEK_V5eyGkh1pAZI9grDKkkT6L0yuGJ_aiyqMAdjzlIhRngi7wfEVkHc7wS5Zd-Jjgi3wDFyHm8Kmw&response_type=code+id_token&client_id=3fc528cf-fc88-46c2-9315-a8cf8724075d&state=state_accounts&nonce=5a6b0d7832a9fb4f80f1170a&scope=openid+accounts&redirect_uri=https%3A%2F%2F127.0.0.1%3A8443%2Fconformancesuite%2Fcallback"
+        Ok(url.into_string())
     }
 }

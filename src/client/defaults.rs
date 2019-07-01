@@ -1,6 +1,5 @@
-extern crate reqwest;
-
-use log::{debug};
+use reqwest;
+use log::debug;
 
 pub fn headers() -> reqwest::header::HeaderMap {
     let mut headers = reqwest::header::HeaderMap::new();
@@ -33,7 +32,6 @@ pub fn headers() -> reqwest::header::HeaderMap {
 
 #[cfg(test)]
 mod tests {
-    // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
 
     #[test]

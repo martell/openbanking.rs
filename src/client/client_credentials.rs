@@ -1,11 +1,8 @@
-extern crate chrono;
-extern crate reqwest;
-
-use serde::{Deserialize, Serialize};
+use serde;
 
 // Ozone response
 // response={"access_token":"c4ddc2ae-7163-4c30-a0a8-c6b4f464a0d1","token_type":"Bearer","expires_in":3600}
-#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Default, Clone, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct ClientCredentialsGrant {
     ///
@@ -33,7 +30,7 @@ fn from_millis<'de, D>(deserializer: D) -> Result<std::time::Duration, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
-    let s: u64 = Deserialize::deserialize(deserializer)?;
+    let s: u64 = serde::Deserialize::deserialize(deserializer)?;
     Ok(std::time::Duration::from_secs(s))
 }
 
@@ -45,7 +42,6 @@ impl Drop for ClientCredentialsGrant {
 
 #[cfg(test)]
 mod tests {
-    // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
 
     #[test]
@@ -58,6 +54,7 @@ mod tests {
         let json = r#"{"access_token":"c875cc35-b712-4904-9ff1-9de9dc2b6014","token_type":"Bearer","expires_in":3600}"#;
         let actual = serde_json::from_str::<ClientCredentialsGrant>(json).unwrap();
         println!("actual={:?}, expected={:?}", actual, expected);
+
         assert_eq!(actual, expected);
     }
 }

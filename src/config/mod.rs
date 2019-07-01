@@ -1,6 +1,8 @@
 use log::debug;
 use serde::{Deserialize, Serialize};
 
+// https://github.com/dtolnay/serde-yaml/issues/94
+// https://github.com/dtolnay/serde-yaml/issues/93
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Config {
@@ -21,14 +23,18 @@ pub struct Config {
     pub register_response: String,
 }
 
-impl Drop for Config {
-    fn drop(&mut self) {
-        println!("Config.drop");
+impl std::str::FromStr for Config {
+    type Err = Box<std::error::Error>;
+
+    /// Load a `Config` from some string.
+    fn from_str(src: &str) -> Result<Self, Self::Err> {
+        let config: Config = serde_yaml::from_str(src)?;
+        Ok(config)
     }
 }
 
-pub fn read(path: &str) -> Result<Config, Box<std::error::Error>> {
-    let reader = std::fs::File::open(path)?;
+pub fn read<S: Into<String>>(path: S) -> Result<Config, Box<std::error::Error>> {
+    let reader = std::fs::File::open(path.into().as_str())?;
 
     let config: Config = serde_yaml::from_reader(reader)?;
     debug!("config={:#?}", config);

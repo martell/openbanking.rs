@@ -1,6 +1,5 @@
-extern crate reqwest;
-
 use log::{debug, info};
+use reqwest;
 use std::io::Read;
 
 pub mod openid_configuration;
@@ -29,7 +28,8 @@ pub fn fetch(config: super::config::Config) -> Result<(), Box<std::error::Error>
     info!("openid_configuration={:?}", openid_configuration);
 
     let mut client = super::client::OpenBankingClient::new(config, openid_configuration)?;
-    let _post_account_access_consents = client.post_account_access_consents()?;
+    let account_requests_response = client.post_account_access_consents()?;
+    client.post_account_access_consents_hybrid_flow(account_requests_response);
 
     Ok(())
 }
