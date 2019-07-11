@@ -1,0 +1,34 @@
+# https://github.com/rust-lang/rustfmt/blob/master/Configurations.md
+
+indent_style = "Block"
+use_small_heuristics = "Off"
+combine_control_expr = false
+wrap_comments = true
+error_on_line_overflow = false
+error_on_unformatted = true
+## fn_args_layout = "Compressed"
+fn_args_density = "Compressed"
+# brace_style = "PreferSameLine"
+# where_single_line = true
+format_strings = true
+imports_indent = "Block"
+imports_layout = "HorizontalVertical"
+merge_imports = true
+match_block_trailing_comma = true
+normalize_comments = true
+reorder_impl_items = true
+report_todo = "Unnumbered"
+report_fixme = "Unnumbered"
+struct_field_align_threshold = 50
+struct_lit_single_line = false
+trailing_comma = "Vertical"
+use_field_init_shorthand = true
+## format_code_in_doc_comments = true
+format_doc_comments = true
+hide_parse_errors = false
+color = "Always"
+unstable_features = true
+edition = "2018"
+version = "Two"
+normalize_doc_attributes = false
+
