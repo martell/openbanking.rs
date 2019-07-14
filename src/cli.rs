@@ -3,7 +3,17 @@ use structopt::StructOpt;
 // Our CLI arguments. (help and version are automatically generated)
 // Documentation on how to use:
 // https://docs.rs/structopt/0.2.10/structopt/index.html#how-to-derivestructopt
-#[derive(StructOpt, Debug)]
+#[derive(
+    StructOpt,
+    Debug,
+    Default,
+    Clone,
+    Hash,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+)]
 #[structopt(raw(global_settings = "&[
         structopt::clap::AppSettings::ColoredHelp,
         structopt::clap::AppSettings::VersionlessSubcommands,
@@ -14,10 +24,8 @@ pub struct Cli {
         short = "l",
         long = "log_level",
         help = "The level to configure the logger.",
-        // default_value = "info",
-        // raw(possible_values = r#"&["error", "warn", "info", "debug"]"#),
         raw(default_value = "LogLevel::default().as_str()"),
-        raw(possible_values = "&LogLevel::possible_values()"),
+        raw(possible_values = "&LogLevel::possible_values()")
     )]
     pub log_level: LogLevel,
     #[structopt(
@@ -30,7 +38,16 @@ pub struct Cli {
     pub config: std::path::PathBuf,
 }
 
-#[derive(Debug)]
+#[derive(
+    StructOpt,
+    Debug,
+    Clone,
+    Hash,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+)]
 pub enum LogLevel {
     Error,
     Warn,
@@ -65,11 +82,11 @@ impl LogLevel {
     pub fn as_str(&self) -> &'static str {
         use LogLevel::*;
         match self {
-            &Error => "error",
-            &Warn => "warn",
-            &Info => "info",
-            &Debug => "debug",
-            &Trace => "trace",
+            Error => "error",
+            Warn => "warn",
+            Info => "info",
+            Debug => "debug",
+            Trace => "trace",
         }
     }
 
@@ -79,6 +96,5 @@ impl LogLevel {
 }
 
 pub fn new() -> Cli {
-    let args = Cli::from_args();
-    args
+    Cli::from_args()
 }

@@ -74,15 +74,15 @@
 
 <body>
     <div class="main">
-        <h2>Params</h2>
+        <h2>params redirect - Params</h2>
         <div class="container">
             <code><span id="div-params"></span></code>
         </div>
-        <h2>Body</h2>
+        <h2>request - Body</h2>
         <div class="container">
             <code><span id="div-body"></span></code>
         </div>
-        <h2>Response</h2>
+        <h2>access_token - Response</h2>
         <div class="container">
             <code><span id="div-response"></span></code>
         </div>
@@ -147,8 +147,8 @@
             }
         };
 
-        // req.send(BODY);
-        req.send(JSON.stringify(params));
+        req.send(BODY);
+        // req.send(JSON.stringify(params));
     </script>
 </body>
 

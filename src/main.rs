@@ -12,53 +12,32 @@ pub mod oidcdiscovery;
 pub mod server;
 pub mod terminal_utils;
 
-// https://github.com/actix/examples/tree/master/hello-world
-use actix_web::{middleware, web, App, HttpServer};
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // std::env::set_var("RUST_BACKTRACE", "full");
     std::env::set_var("RUST_BACKTRACE", "1");
     std::env::set_var("RUST_LOG", "trace");
 
     let cli = cli::new();
-    let rust_log = cli.log_level.as_str();
-    std::env::set_var(
-        "RUST_LOG",
-        format!(
-            "{log_level},actix_web={log_level},actix_server={log_level}",
-            log_level = rust_log
-        ),
-    );
-    env_logger::init();
     info!("cli={:?}", cli);
 
-    // let app = || {
-    //     App::new()
-    //         // enable logger
-    //         .wrap(middleware::Logger::default())
-    //         .service(web::resource("/").route(web::get().to(server::authorise_callback)))
-    //         .service(web::resource("/hello").to(|| "Hello world!"))
-    //         .service(
-    //             web::resource("/api/conformancesuite/callback").to(server::api_authorise_callback),
-    //         )
-    //         .service(web::resource("/conformancesuite/callback").to(server::authorise_callback))
-    // };
-    // let addr = "127.0.0.1:8080";
-    // HttpServer::new(app).bind(addr)?.system_exit().run();
+    let log_level = cli.log_level.as_str();
+    let rust_log = format!("{},actix_web={},actix_server={}", log_level, log_level, log_level);
+    std::env::set_var("RUST_LOG", rust_log);
+    env_logger::init();
 
-    // std::process::exit(1);
+    let path = cli.config.into_os_string().into_string().expect("config.into_os_string failed");
+    let config = config::Config::read(path).expect("config::read failed");
+    let openid_configuration = oidcdiscovery::OpenIDConfiguration::fetch(config.clone())
+        .expect("oidcdiscovery::fetch failed");
 
-    let path = cli
-        .config
-        .into_os_string()
-        .into_string()
-        .expect("config.into_os_string failed");
-    let config = config::read(path).expect("config::read failed");
-    // let config = config::read(cli.config.to_str().unwrap()).expect("Couldn't config::read()");
-    // let config = config::read(cli.config.as_str()).expect("Couldn't config::read()");
-    oidcdiscovery::fetch(config).expect("oidcdiscovery::fetch failed");
+    let client = client::OpenBankingClient::new(config.clone(), openid_configuration.clone())?;
+
+    let thread = server::start(client.clone());
+
+    let account_requests_response = client.post_account_access_consents()?;
+    let url = client.post_account_access_consents_hybrid_flow(account_requests_response)?;
+    info!("url={}", url);
+
+    let _ = thread.join().unwrap();
 
     Ok(())
 }
-
-// https://github.com/ramosbugs/openidconnect-rs/blob/master/src/registration.rs

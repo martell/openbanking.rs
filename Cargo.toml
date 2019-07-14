@@ -4,19 +4,15 @@ version = "0.1.0"
 authors = ["Mohamed Bana <m@bana.io>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.release]
+incremental = true
+debug = true
 
 # https://doc.rust-lang.org/rust-by-example/testing/dev_dependencies.html
 [dev-dependencies]
 pretty_assertions = "0.6.1"
 
 [dependencies]
-hyper = "0.12"
-hyper-tls = "0.3.2"
-futures = "0.1.27"
-tokio = "0.1.21"
-tokio-rustls = "0.9"
-hyper-rustls = "0.16.1"
 rustls = "0.15.2"
 reqwest = { version = "0.9.18", features = ["rustls-tls"] }
 bytes = "0.4"
@@ -38,7 +34,13 @@ actix-files = "0.1.1"
 structopt = "0.2"
 # https://stevedonovan.github.io/rust-gentle-intro/6-error-handling.html#simple-error-for-simple-errors
 # simple-error = "0.2.0"
-open = "1.2.2"
 biscuit = "0.2.0"
 url = "1.7.2"
 
+[dependencies.tokio]
+version = "0.1.7"
+features = ["rt-full", "tcp"]
+default-features = false
+
+[dependencies.futures]
+version = "0.1.28"

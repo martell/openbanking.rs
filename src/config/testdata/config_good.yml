@@ -11,3 +11,5 @@ signature_public: testdata/keys/signature_public.pem
 transport_private: testdata/keys/transport_private.key
 transport_public: testdata/keys/transport_public.pem
 register_response: testdata/register_response.json
+openid_configuration: <openid_configuration>
+financial_id: <financial_id>
