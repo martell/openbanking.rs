@@ -67,6 +67,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use pretty_assertions::assert_eq;
+
     #[test]
     fn test_deserialize_good() {
         let expected = super::ClientCredentialsGrant {

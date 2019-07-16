@@ -3,6 +3,7 @@ name = "openbanking"
 version = "0.1.0"
 authors = ["Mohamed Bana <m@bana.io>"]
 edition = "2018"
+license-file = "./LICENSE"
 
 [profile.release]
 incremental = true
@@ -16,7 +17,7 @@ pretty_assertions = "0.6.1"
 rustls = "0.15.2"
 reqwest = { version = "0.9.18", features = ["rustls-tls"] }
 bytes = "0.4"
-env_logger = "0.6.1"
+env_logger = "0.6.2"
 log = { version = "0.4", features = ["std", "serde"] }
 # log = { version = "0.4", features = ["max_level_debug", "release_max_level_warn"] }
 serde = { version = "1.0", features = ["derive", "std"] }
@@ -29,8 +30,8 @@ dialoguer = "0.4.0"
 clap = "2.33"
 uuid = { version = "0.7", features = ["serde", "v4"] }
 chrono = { version = "0.4", features = ["serde"] }
-actix-web = "1.0.0"
-actix-files = "0.1.1"
+actix-web = "1.0.3"
+actix-files = "0.1.3"
 structopt = "0.2"
 # https://stevedonovan.github.io/rust-gentle-intro/6-error-handling.html#simple-error-for-simple-errors
 # simple-error = "0.2.0"

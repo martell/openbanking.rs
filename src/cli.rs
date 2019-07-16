@@ -3,17 +3,7 @@ use structopt::StructOpt;
 // Our CLI arguments. (help and version are automatically generated)
 // Documentation on how to use:
 // https://docs.rs/structopt/0.2.10/structopt/index.html#how-to-derivestructopt
-#[derive(
-    StructOpt,
-    Debug,
-    Default,
-    Clone,
-    Hash,
-    PartialEq,
-    PartialOrd,
-    Eq,
-    Ord,
-)]
+#[derive(StructOpt, Debug, Default, Clone, Hash, PartialEq, PartialOrd, Eq, Ord)]
 #[structopt(raw(global_settings = "&[
         structopt::clap::AppSettings::ColoredHelp,
         structopt::clap::AppSettings::VersionlessSubcommands,
@@ -38,16 +28,7 @@ pub struct Cli {
     pub config: std::path::PathBuf,
 }
 
-#[derive(
-    StructOpt,
-    Debug,
-    Clone,
-    Hash,
-    PartialEq,
-    PartialOrd,
-    Eq,
-    Ord,
-)]
+#[derive(StructOpt, Debug, Clone, Hash, PartialEq, PartialOrd, Eq, Ord)]
 pub enum LogLevel {
     Error,
     Warn,

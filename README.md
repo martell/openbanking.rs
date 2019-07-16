@@ -2,6 +2,10 @@
 
 Connect to ForgeRock's directory.
 
+## Builds [![CircleCI](https://circleci.com/gh/banaio/openbanking.rs.svg?style=svg)](https://circleci.com/gh/banaio/openbanking.rs)
+
+[`https://circleci.com/gh/banaio/openbanking.rs`](https://circleci.com/gh/banaio/openbanking.rs)
+
 ## Example
 
 ```sh

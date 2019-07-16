@@ -3,6 +3,8 @@ use log::debug;
 use reqwest;
 use uuid;
 
+pub mod certs;
+
 pub struct ClientBuilderParams {
     pub cert_issuing_ca: reqwest::Certificate,
     pub cert_root_ca:    reqwest::Certificate,
@@ -22,8 +24,8 @@ pub fn client_builder_params(
     identity_buf.append(&mut transport_public.into_bytes());
     let pkcs12 = reqwest::Identity::from_pem(&identity_buf)?;
 
-    let cert_issuing_ca = reqwest::Certificate::from_pem(super::certs::CERT_ISSUING_CA.as_bytes())?;
-    let cert_root_ca = reqwest::Certificate::from_pem(super::certs::CERT_ROOT_CA.as_bytes())?;
+    let cert_issuing_ca = reqwest::Certificate::from_pem(certs::CERT_ISSUING_CA.as_bytes())?;
+    let cert_root_ca = reqwest::Certificate::from_pem(certs::CERT_ROOT_CA.as_bytes())?;
 
     let default_headers = default_headers();
     let params = ClientBuilderParams {
@@ -139,6 +141,8 @@ pub fn default_headers() -> reqwest::header::HeaderMap {
 
 #[cfg(test)]
 mod tests {
+    use pretty_assertions::assert_eq;
+
     #[test]
     fn test_default_headers() {
         let mut expected = reqwest::header::HeaderMap::new();

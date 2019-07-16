@@ -26,6 +26,6 @@ indent_size = 2
 [Makefile]
 indent_style = tab
 
-[*.yml]
+[*.yml, *.yaml]
 indent_style = space
 indent_size = 2

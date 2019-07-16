@@ -6,10 +6,8 @@ use std::{io::Read, ops::Add};
 use url::Url;
 
 pub mod accounts;
-pub mod certs;
 pub mod claims;
 pub mod client_credentials;
-pub mod http;
 
 #[derive(Debug, Clone)]
 pub struct OpenBankingClient {
@@ -23,7 +21,7 @@ impl OpenBankingClient {
         config: super::config::Config,
         openid_configuration: super::oidcdiscovery::OpenIDConfiguration,
     ) -> Result<Self, Box<std::error::Error>> {
-        let client = http::new_client(config.clone())?;
+        let client = super::http::new_client(config.clone())?;
         Ok(Self {
             config,
             openid_configuration,
@@ -113,12 +111,12 @@ impl OpenBankingClient {
         let header: [(reqwest::header::HeaderName, String); 8] = [
             (reqwest::header::ACCEPT, "application/json".to_string()),
             (reqwest::header::CONTENT_TYPE, "application/json".to_string()),
-            http::authorization(client_credentials_grant.access_token.clone()),
-            http::x_fapi_financial_id(self.config.financial_id.clone()),
-            http::x_fapi_customer_ip_address(),
-            http::x_fapi_customer_last_logged_time(),
-            http::x_idempotency_key(),
-            http::x_fapi_interaction_id(),
+            super::http::authorization(client_credentials_grant.access_token.clone()),
+            super::http::x_fapi_financial_id(self.config.financial_id.clone()),
+            super::http::x_fapi_customer_ip_address(),
+            super::http::x_fapi_customer_last_logged_time(),
+            super::http::x_idempotency_key(),
+            super::http::x_fapi_interaction_id(),
         ];
         for (key, val) in &header {
             headers.insert(key, val.parse().unwrap());
@@ -190,7 +188,7 @@ impl OpenBankingClient {
         // https://github.com/actix/actix-web/blob/master/examples/client.rs
         // https://github.com/seanmonstar/reqwest/blob/564a08f23041edb5e7384e4a4d90accdef6b06c9/tests/async.rs#L95
         // https://github.com/seanmonstar/reqwest/blob/564a08f23041edb5e7384e4a4d90accdef6b06c9/tests/async.rs#L59
-        let client = match http::new_async_client(self.config.clone()) {
+        let client = match super::http::new_async_client(self.config.clone()) {
             Ok(client) => client,
             Err(error) => return Box::new(futures::future::err(error)),
         };
@@ -212,7 +210,8 @@ impl OpenBankingClient {
             })
             .map(|body| {
                 let v = body.to_vec();
-                // response="{\"error\":\"invalid_request\",\"error_description\":\"authorization code invalid\"}"
+                // response="{\"error\":\"invalid_request\",\"error_description\":\"
+                // authorization code invalid\"}"
                 let response = String::from_utf8_lossy(&v).to_string();
                 info!("outer map - response={:?}", response);
                 response

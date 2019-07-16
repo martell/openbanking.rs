@@ -1,0 +1,46 @@
+# https://github.com/tendermint/rust-abci/blob/master/.circleci/config.yml
+# https://gist.github.com/zargony/de209b1a790c3cb2176c86405a51b33c
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: circleci/rust:1.36.0-stretch
+    steps:
+      - checkout
+      - run:
+          name: Version information
+          command: |
+            rustc --version
+            cargo --version
+            rustup --version
+      - run:
+          name: Format
+          command: |
+            rustup component add rustfmt
+            cargo fmt -- --check --color=auto || true
+      - run:
+          name: Clippy
+          command: |
+            rustup component add clippy
+            cargo clippy --all || true
+      - run:
+          name: Stable Build
+          command: |
+            rustup toolchain install stable
+            rustup run stable rustc --version --verbose
+            rustup run stable cargo --version --verbose
+            rustup run stable cargo build
+      - run:
+          name: Stable Test
+          command: RUST_BACKTRACE=full rustup run stable cargo test
+      - run:
+          name: Nightly Build
+          command: |
+            rustup toolchain install nightly
+            rustup run nightly rustc --version --verbose
+            rustup run nightly cargo --version --verbose
+            rustup run nightly cargo build
+      - run:
+          name: Nightly Test
+          command: RUST_BACKTRACE=full rustup run nightly cargo test

@@ -1,13 +1,9 @@
-// https://doc.rust-lang.org/rust-by-example/testing/dev_dependencies.html
-#[cfg(test)]
-#[macro_use]
-extern crate pretty_assertions;
-
 use log::info;
 
 pub mod cli;
 pub mod client;
 pub mod config;
+pub mod http;
 pub mod oidcdiscovery;
 pub mod server;
 pub mod terminal_utils;

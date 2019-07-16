@@ -52,7 +52,7 @@ pub struct OpenIDConfiguration {
 
 impl OpenIDConfiguration {
     pub fn fetch(config: super::config::Config) -> Result<Self, Box<std::error::Error>> {
-        let default_headers = super::client::http::default_headers();
+        let default_headers = super::http::default_headers();
         let client =
             reqwest::Client::builder().use_rustls_tls().default_headers(default_headers).build()?;
         let openid_configuration = config.openid_configuration.clone();
@@ -74,13 +74,26 @@ impl OpenIDConfiguration {
 
 #[cfg(test)]
 mod tests {
+    use pretty_assertions::assert_eq;
+
     #[test]
     fn test_deserialize_good() {
-        let openid_configuration_forgerock =
-            include_str!("testdata/openid-configuration_forgerock.json");
-        serde_json::from_str::<super::OpenIDConfiguration>(openid_configuration_forgerock).unwrap();
+        let openid_configuration_forgerock = serde_json::from_str::<super::OpenIDConfiguration>(
+            include_str!("testdata/openid-configuration_forgerock.json"),
+        )
+        .unwrap();
+        let openid_configuration_ozone = serde_json::from_str::<super::OpenIDConfiguration>(
+            include_str!("testdata/openid-configuration_ozone.json"),
+        )
+        .unwrap();
 
-        let openid_configuration_ozone = include_str!("testdata/openid-configuration_ozone.json");
-        serde_json::from_str::<super::OpenIDConfiguration>(openid_configuration_ozone).unwrap();
+        assert_eq!(
+            openid_configuration_forgerock.issuer,
+            "https://as.aspsp.ob.forgerock.financial/oauth2"
+        );
+        assert_eq!(
+            openid_configuration_ozone.issuer,
+            "https://modelobankauth2018.o3bank.co.uk:4101"
+        );
     }
 }

@@ -36,8 +36,10 @@ pub struct OBReadConsentResponse1Data {
 
 #[cfg(test)]
 mod tests {
+    use pretty_assertions::assert_eq;
+
     #[test]
-    fn test_deserialize_good() {
+    fn test_to_string_good() {
         let expected = super::OBReadConsentResponse1 {
             data: super::OBReadConsentResponse1Data {
                 consent_id: "A02aff57e-80f9-4964-8548-4c9b17cfaa29".to_string(),

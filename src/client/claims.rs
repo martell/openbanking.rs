@@ -24,13 +24,13 @@ use serde;
     serde::Serialize, serde::Deserialize, Debug, Clone, Hash, PartialEq, PartialOrd, Eq, Ord,
 )]
 #[serde(deny_unknown_fields)]
-struct Claims {
-    id_token: IdToken,
-    userinfo: UserInfo,
+pub struct Claims {
+    pub id_token: IdToken,
+    pub userinfo: UserInfo,
 }
 
 impl Claims {
-    fn new(consent_id: String) -> Claims {
+    pub fn new(consent_id: String) -> Claims {
         Claims {
             id_token: IdToken {
                 acr:                   Acr {
@@ -55,26 +55,26 @@ impl Claims {
     serde::Serialize, serde::Deserialize, Debug, Clone, Hash, PartialEq, PartialOrd, Eq, Ord,
 )]
 #[serde(deny_unknown_fields)]
-struct IdToken {
-    acr:                   Acr,
-    openbanking_intent_id: OpenbankingIntentId,
+pub struct IdToken {
+    pub acr:                   Acr,
+    pub openbanking_intent_id: OpenbankingIntentId,
 }
 
 #[derive(
     serde::Serialize, serde::Deserialize, Debug, Clone, Hash, PartialEq, PartialOrd, Eq, Ord,
 )]
 #[serde(deny_unknown_fields)]
-struct UserInfo {
-    openbanking_intent_id: OpenbankingIntentId,
+pub struct UserInfo {
+    pub openbanking_intent_id: OpenbankingIntentId,
 }
 
 #[derive(
     serde::Serialize, serde::Deserialize, Debug, Clone, Hash, PartialEq, PartialOrd, Eq, Ord,
 )]
 #[serde(deny_unknown_fields)]
-struct Acr {
-    value:     String,
-    essential: bool,
+pub struct Acr {
+    pub value:     String,
+    pub essential: bool,
 }
 
 impl Default for Acr {
@@ -90,9 +90,9 @@ impl Default for Acr {
     serde::Serialize, serde::Deserialize, Debug, Clone, Hash, PartialEq, PartialOrd, Eq, Ord,
 )]
 #[serde(deny_unknown_fields)]
-struct OpenbankingIntentId {
-    value:     String,
-    essential: bool,
+pub struct OpenbankingIntentId {
+    pub value:     String,
+    pub essential: bool,
 }
 
 impl Default for OpenbankingIntentId {
@@ -131,14 +131,28 @@ impl Default for OpenbankingIntentId {
     serde::Serialize, serde::Deserialize, Debug, Clone, Hash, PartialEq, PartialOrd, Eq, Ord,
 )]
 #[serde(deny_unknown_fields)]
-struct PrivateClaims {
-    scope:         String,
-    claims:        Claims,
-    redirect_uri:  String,
-    state:         String,
-    nonce:         String,
-    client_id:     String,
-    response_type: String,
+pub struct PrivateClaims {
+    pub scope:         String,
+    pub claims:        Claims,
+    pub redirect_uri:  String,
+    pub state:         String,
+    pub nonce:         String,
+    pub client_id:     String,
+    pub response_type: String,
+}
+
+impl PrivateClaims {
+    pub fn new(client_id: String, consent_id: String) -> Self {
+        PrivateClaims {
+            scope:         "openid accounts".into(),
+            claims:        Claims::new(consent_id),
+            redirect_uri:  "https://127.0.0.1:8443/conformancesuite/callback".into(),
+            state:         "state_accounts".into(),
+            nonce:         "5a6b0d7832a9fb4f80f1170a".into(),
+            client_id:     client_id.clone(),
+            response_type: "code id_token".into(),
+        }
+    }
 }
 
 pub struct JWT(pub String);
@@ -149,28 +163,17 @@ impl std::fmt::Display for JWT {
     }
 }
 
+pub type ClaimsSet = biscuit::ClaimsSet<PrivateClaims>;
+pub type JWS = biscuit::jws::Compact<ClaimsSet, biscuit::Empty>;
+
 impl JWT {
-    // forgerock `request`:
-    // eyJhbGciOiJSUzI1NiIsImtpZCI6ImQ2YzNmNDlkLTcxMTItNGM1Yy05YzlkLTg0OTI2ZTk5MmM3NCIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwczovL21hdGxzLmFzLmFzcHNwLm9iLmZvcmdlcm9jay5maW5hbmNpYWwvb2F1dGgyL29wZW5iYW5raW5nIiwiY2xhaW1zIjp7ImlkX3Rva2VuIjp7ImFjciI6eyJlc3NlbnRpYWwiOnRydWUsInZhbHVlIjoidXJuOm9wZW5iYW5raW5nOnBzZDI6c2NhIn0sIm9wZW5iYW5raW5nX2ludGVudF9pZCI6eyJlc3NlbnRpYWwiOnRydWUsInZhbHVlIjoiQWJjM2UwOGJjLTcyYzUtNGUzMy1hYjYwLThiZDlhZjhhZGMxNiJ9fSwidXNlcmluZm8iOnsib3BlbmJhbmtpbmdfaW50ZW50X2lkIjp7ImVzc2VudGlhbCI6dHJ1ZSwidmFsdWUiOiJBYmMzZTA4YmMtNzJjNS00ZTMzLWFiNjAtOGJkOWFmOGFkYzE2In19fSwiY2xpZW50X2lkIjoiNTRmNjQzMDktNDMzZC00NjEwLTk1ZDItNjNkMmY1MjUzNDEyIiwiZXhwIjoxNTQwMTk3OTk5LCJpYXQiOjE1NDAxOTc4NzksImlzcyI6IjU0ZjY0MzA5LTQzM2QtNDYxMC05NWQyLTYzZDJmNTI1MzQxMiIsImp0aSI6IjJmODMyMzJjLTA0NmUtNGIyMC05NTc4LWRmMTljOTdhZTNmOSIsIm5vbmNlIjoiNWE2YjBkNzgzMmE5ZmI0ZjgwZjExNzBhIiwicmVkaXJlY3RfdXJpIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL29wZW5iYW5raW5nL2JhbmFpby9mb3JnZXJvY2siLCJyZXNwb25zZV90eXBlIjoiY29kZSBpZF90b2tlbiIsInNjb3BlIjoiYWNjb3VudHMgb3BlbmlkIiwic3RhdGUiOiI1YTZiMGQ3ODMyYTlmYjRmODBmMTE3MGEifQ.KuTvvOC2yz5idjUVH6I7aZlHj0jGuR06zJlNny8D01XoHvm0xA27YXyIwsQO-q0MlMDErBzzU8WMZ3-6wJxWth4thPmSu5zzVAYo7ZWEUDHhlq7YWZkATRintLv0PqUlx_h8r8N2tmtm0UWE2VtxKdRQN1jSD7_kjsw7w_vaP_OwvOA8lGEjU30JW4HxHLfxyeIjHxsTY_dlSiHvWwdmqlwEW9DQJtAYHGboJkX6GBXqV5zEHD4UdtjRYIkyPDAgHqt5smiEzMcuGwJoD2v4vSBEmpEdnmAANgPFxKhNsyNhm7HQXaL6vRLuasgrg7JW9F8iWvw-4BlASAcoBiwKCg
-    pub fn new(
-        client_id: String, kid: String, issuer: String, request_object_signing_alg: String,
-        consent_id: String,
-    ) -> Result<Self, Box<std::error::Error>> {
+    pub fn payload(client_id: String, issuer: String, private: PrivateClaims) -> ClaimsSet {
         use biscuit::{SingleOrMultiple, StringOrUri};
 
         let expiry =
             Some(std::convert::From::from(chrono::Utc::now() + chrono::Duration::minutes(29)));
         let issued_at = Some(std::convert::From::from(chrono::Utc::now()));
-        let id = Some(super::http::new_id());
-        let private = PrivateClaims {
-            scope:         "openid accounts".into(),
-            claims:        Claims::new(consent_id),
-            redirect_uri:  "https://127.0.0.1:8443/conformancesuite/callback".into(),
-            state:         "state_accounts".into(),
-            nonce:         "5a6b0d7832a9fb4f80f1170a".into(),
-            client_id:     client_id.clone(),
-            response_type: "code id_token".into(),
-        };
+        let id = Some(crate::http::new_id());
         let registered = biscuit::RegisteredClaims {
             issuer: Some(StringOrUri::String(client_id.clone())),
             subject: Some(StringOrUri::String(client_id.clone())),
@@ -180,11 +183,19 @@ impl JWT {
             id,
             ..Default::default()
         };
-        let payload = biscuit::ClaimsSet::<PrivateClaims> {
+
+        ClaimsSet {
             registered,
             private,
-        };
+        }
+    }
 
+    pub fn jwt(
+        client_id: String, kid: String, issuer: String, request_object_signing_alg: String,
+        consent_id: String,
+    ) -> JWS {
+        let private = PrivateClaims::new(client_id.clone(), consent_id.clone());
+        let payload = JWT::payload(client_id.clone(), issuer.clone(), private);
         let algorithm = match request_object_signing_alg.as_str() {
             "PS256" => biscuit::jwa::SignatureAlgorithm::PS256,
             "RS256" => biscuit::jwa::SignatureAlgorithm::RS256,
@@ -199,6 +210,23 @@ impl JWT {
             payload.clone(),
         );
 
+        jwt
+    }
+
+    // forgerock `request`:
+    // eyJhbGciOiJSUzI1NiIsImtpZCI6ImQ2YzNmNDlkLTcxMTItNGM1Yy05YzlkLTg0OTI2ZTk5MmM3NCIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwczovL21hdGxzLmFzLmFzcHNwLm9iLmZvcmdlcm9jay5maW5hbmNpYWwvb2F1dGgyL29wZW5iYW5raW5nIiwiY2xhaW1zIjp7ImlkX3Rva2VuIjp7ImFjciI6eyJlc3NlbnRpYWwiOnRydWUsInZhbHVlIjoidXJuOm9wZW5iYW5raW5nOnBzZDI6c2NhIn0sIm9wZW5iYW5raW5nX2ludGVudF9pZCI6eyJlc3NlbnRpYWwiOnRydWUsInZhbHVlIjoiQWJjM2UwOGJjLTcyYzUtNGUzMy1hYjYwLThiZDlhZjhhZGMxNiJ9fSwidXNlcmluZm8iOnsib3BlbmJhbmtpbmdfaW50ZW50X2lkIjp7ImVzc2VudGlhbCI6dHJ1ZSwidmFsdWUiOiJBYmMzZTA4YmMtNzJjNS00ZTMzLWFiNjAtOGJkOWFmOGFkYzE2In19fSwiY2xpZW50X2lkIjoiNTRmNjQzMDktNDMzZC00NjEwLTk1ZDItNjNkMmY1MjUzNDEyIiwiZXhwIjoxNTQwMTk3OTk5LCJpYXQiOjE1NDAxOTc4NzksImlzcyI6IjU0ZjY0MzA5LTQzM2QtNDYxMC05NWQyLTYzZDJmNTI1MzQxMiIsImp0aSI6IjJmODMyMzJjLTA0NmUtNGIyMC05NTc4LWRmMTljOTdhZTNmOSIsIm5vbmNlIjoiNWE2YjBkNzgzMmE5ZmI0ZjgwZjExNzBhIiwicmVkaXJlY3RfdXJpIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL29wZW5iYW5raW5nL2JhbmFpby9mb3JnZXJvY2siLCJyZXNwb25zZV90eXBlIjoiY29kZSBpZF90b2tlbiIsInNjb3BlIjoiYWNjb3VudHMgb3BlbmlkIiwic3RhdGUiOiI1YTZiMGQ3ODMyYTlmYjRmODBmMTE3MGEifQ.KuTvvOC2yz5idjUVH6I7aZlHj0jGuR06zJlNny8D01XoHvm0xA27YXyIwsQO-q0MlMDErBzzU8WMZ3-6wJxWth4thPmSu5zzVAYo7ZWEUDHhlq7YWZkATRintLv0PqUlx_h8r8N2tmtm0UWE2VtxKdRQN1jSD7_kjsw7w_vaP_OwvOA8lGEjU30JW4HxHLfxyeIjHxsTY_dlSiHvWwdmqlwEW9DQJtAYHGboJkX6GBXqV5zEHD4UdtjRYIkyPDAgHqt5smiEzMcuGwJoD2v4vSBEmpEdnmAANgPFxKhNsyNhm7HQXaL6vRLuasgrg7JW9F8iWvw-4BlASAcoBiwKCg
+    pub fn new(
+        client_id: String, kid: String, issuer: String, request_object_signing_alg: String,
+        consent_id: String,
+    ) -> Result<Self, Box<std::error::Error>> {
+        let jwt = JWT::jwt(
+            client_id.clone(),
+            kid.clone(),
+            issuer.clone(),
+            request_object_signing_alg.clone(),
+            consent_id.clone(),
+        );
+
         // let signing_secret =
         //     biscuit::jws::Secret::rsa_keypair_from_file("src/client/private_key.der"
         // ).unwrap();
@@ -207,19 +235,64 @@ impl JWT {
         )?;
         // let signing_secret =
         // biscuit::jws::Secret::Bytes("secret".to_string().into_bytes());
-        let token = jwt.into_encoded(&signing_secret)?;
-        let token = token.unwrap_encoded().to_string();
+        let compact_encoded_jwt = jwt.into_encoded(&signing_secret)?;
+        let jwt = compact_encoded_jwt.encoded()?.to_string();
+        // let jwt = compact_encoded_jwt.unwrap_encoded().to_string();
 
-        Ok(JWT(token))
+        Ok(JWT(jwt))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn test_claims() {}
+    use pretty_assertions::assert_eq;
 
     #[test]
+    fn test_private_claims() {
+        let client_id: String = "stub_client_id".into();
+        let consent_id: String = "stub_consent_id".into();
+        let expected = serde_json::json!({
+            "scope":         "openid accounts",
+            "claims":        super::Claims::new(consent_id.clone()),
+            "redirect_uri":  "https://127.0.0.1:8443/conformancesuite/callback",
+            "state":         "state_accounts",
+            "nonce":         "5a6b0d7832a9fb4f80f1170a",
+            "client_id":     client_id.clone().as_str(),
+            "response_type": "code id_token",
+        });
+        let actual = super::PrivateClaims::new(client_id, consent_id);
+
+        assert_eq!(serde_json::to_string(&actual).unwrap(), expected.to_string());
+    }
+
+    #[test]
+    fn test_claims() {
+        let consent_id: String = "stub_consent_id".into();
+        let expected = serde_json::json!({
+            "id_token": {
+                "acr": {
+                    "value": "urn:openbanking:psd2:sca",
+                    "essential": true
+                },
+                "openbanking_intent_id": {
+                    "value": consent_id.clone().as_str(),
+                    "essential": true
+                }
+            },
+            "userinfo": {
+                "openbanking_intent_id": {
+                    "value": consent_id.clone().as_str(),
+                    "essential": true
+                }
+            }
+        });
+        let actual = super::Claims::new(consent_id.clone());
+
+        assert_eq!(serde_json::to_string(&actual).unwrap(), expected.to_string());
+    }
+
+    #[test]
+    #[ignore]
     fn test_jwt_new_good() {
         let client_id = "3fc528cf-fc88-46c2-9315-a8cf8724075d".to_string();
         let kid = "077825719abfc90f8b5645244a225510b834347a".to_string();
@@ -231,8 +304,6 @@ mod tests {
 
         let expected = "stub";
         let actual = jwt.0;
-        println!("expected={:?}", expected);
-        println!("actual={:?}", actual);
 
         assert_eq!(actual, expected);
     }

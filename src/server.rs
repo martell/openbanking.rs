@@ -76,10 +76,10 @@ pub fn authorise_callback() -> actix_web::Result<actix_files::NamedFile> {
 )]
 #[serde(deny_unknown_fields)]
 pub struct RedirectFragment {
-    code:     String,
-    scope:    Option<String>,
-    id_token: String,
-    state:    String,
+    pub code:     String,
+    pub scope:    Option<String>,
+    pub id_token: String,
+    pub state:    String,
 }
 
 #[derive(
@@ -96,10 +96,10 @@ pub struct RedirectFragment {
 )]
 #[serde(deny_unknown_fields)]
 pub struct RedirectQuery {
-    code:     String,
-    scope:    Option<String>,
-    id_token: String,
-    state:    String,
+    pub code:     String,
+    pub scope:    Option<String>,
+    pub id_token: String,
+    pub state:    String,
 }
 
 #[derive(
@@ -116,9 +116,9 @@ pub struct RedirectQuery {
 )]
 #[serde(deny_unknown_fields)]
 pub struct RedirectError {
-    error_description: String,
-    error:             String,
-    state:             String,
+    pub error_description: String,
+    pub error:             String,
+    pub state:             String,
 }
 
 // This is the callback containing `code`, `id_token`, `scope` and `state` in a
@@ -139,7 +139,7 @@ pub fn api_authorise_callback(
     request: actix_web::HttpRequest, params: actix_web::web::Form<RedirectFragment>,
     client: actix_web::web::Data<super::client::OpenBankingClient>,
 ) -> impl futures::IntoFuture<Item = String, Error = ()> {
-// ) -> impl futures::Future<Item = String, Error = ()> {
+    // ) -> impl futures::Future<Item = String, Error = ()> {
     use futures::future::Future;
 
     info!("request={:?}", request);
