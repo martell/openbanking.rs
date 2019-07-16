@@ -1,29 +1,95 @@
 # https://github.com/tendermint/rust-abci/blob/master/.circleci/config.yml
 # https://gist.github.com/zargony/de209b1a790c3cb2176c86405a51b33c
-version: 2
+# https://abronan.com/building-a-rust-project-on-circleci/
+# https://medium.com/@edouard.oger/rust-caching-on-circleci-using-sccache-c996344f0115
+# https://blog.fgribreau.com/2017/01/how-to-test-rust-projects-on-circleci.html
+# https://github.com/cossacklabs/themis/blob/master/.circleci/config.yml
+# version: 2
+# jobs:
+#   build:
+#     docker:
+#       - image: circleci/rust:1.36.0-stretch
+#     steps:
+#       - checkout
+#       - run:
+#           name: Version information
+#           command: |
+#             rustc --version
+#             cargo --version
+#             rustup --version
+#       - run:
+#           name: Calculate dependencies
+#           command: cargo generate-lockfile
+#       - restore_cache:
+#           keys:
+#             - v1-cargo-cache-{{ arch }}-{{ checksum "Cargo.lock" }}
+#       - run:
+#           name: Format
+#           command: |
+#             rustup component add rustfmt
+#             cargo fmt -- --check --color=auto || true
+#       - run:
+#           name: Clippy
+#           command: |
+#             rustup component add clippy
+#             cargo clippy --all || true
+#       - run:
+#           name: Stable Build
+#           command: |
+#             rustup toolchain install stable
+#             rustup run stable rustc --version --verbose
+#             rustup run stable cargo --version --verbose
+#             rustup run stable cargo build
+#       - run:
+#           name: Stable Test
+#           command: RUST_BACKTRACE=full rustup run stable cargo test
+#       - run:
+#           name: Nightly Build
+#           command: |
+#             rustup toolchain install nightly
+#             rustup run nightly rustc --version --verbose
+#             rustup run nightly cargo --version --verbose
+#             rustup run nightly cargo build
+#       - run:
+#           name: Nightly Test
+#           command: RUST_BACKTRACE=full rustup run nightly cargo test
 
-jobs:
-  build:
-    docker:
-      - image: circleci/rust:1.36.0-stretch
+version: 2.1
+commands:
+  version-information:
     steps:
-      - checkout
       - run:
           name: Version information
           command: |
             rustc --version
             cargo --version
             rustup --version
+
+  calculate-dependencies:
+    steps:
+      - run:
+          name: Calculate dependencies
+          command: |
+            cargo generate-lockfile
+
+  format:
+    steps:
       - run:
           name: Format
           command: |
             rustup component add rustfmt
             cargo fmt -- --check --color=auto || true
+
+  clippy:
+    steps:
       - run:
           name: Clippy
           command: |
             rustup component add clippy
             cargo clippy --all || true
+
+  stable-build:
+    steps:
       - run:
           name: Stable Build
           command: |
@@ -31,16 +97,55 @@ jobs:
             rustup run stable rustc --version --verbose
             rustup run stable cargo --version --verbose
             rustup run stable cargo build
+  stable-test:
+    steps:
       - run:
           name: Stable Test
-          command: RUST_BACKTRACE=full rustup run stable cargo test
+          command: |
+            RUST_BACKTRACE=full rustup run stable cargo test
+
+  nightly-build:
+    steps:
       - run:
-          name: Nightly Build
+          name: Stable Build
           command: |
             rustup toolchain install nightly
             rustup run nightly rustc --version --verbose
             rustup run nightly cargo --version --verbose
             rustup run nightly cargo build
+  nightly-test:
+    steps:
       - run:
           name: Nightly Test
-          command: RUST_BACKTRACE=full rustup run nightly cargo test
+          command: |
+            RUST_BACKTRACE=full rustup run nightly cargo test
+
+jobs:
+  rust-stable-build-and-test:
+    docker:
+      - image: circleci/rust:1.36.0-stretch
+    steps:
+      - checkout
+      - version-information
+      # - calculate-dependencies
+      - format
+      - clippy
+      - stable-build
+      - stable-test
+  rust-nightly-build-and-test:
+    docker:
+      - image: circleci/rust:1.36.0-stretch
+    steps:
+      - checkout
+      - version-information
+      # - calculate-dependencies
+      - format
+      - clippy
+      - nightly-build
+      - nightly-test
+workflows:
+  version: 2
+  run-tests:
+    jobs:
+      - rust-stable-build-and-test
+      - rust-nightly-build-and-test
