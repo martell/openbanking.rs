@@ -246,6 +246,7 @@ impl JWT {
 #[cfg(test)]
 mod tests {
     use pretty_assertions::assert_eq;
+    use serde_json;
 
     #[test]
     fn test_private_claims() {

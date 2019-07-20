@@ -1,6 +1,11 @@
 # `openbanking.rs`
 
-Connect to ForgeRock's directory.
+Connect to either:
+
+* [Integrating a TPP with Ozone Model Banks Using Postman](https://openbanking.atlassian.net/wiki/spaces/DZ/pages/32374785/Integrating+a+TPP+with+Ozone+Model+Banks+Using+Postman+-+Draft).
+* [Integrating a TPP with ForgeRock Model Bank on Directory Sandbox](https://openbanking.atlassian.net/wiki/spaces/DZ/pages/187793608/Integrating+a+TPP+with+ForgeRock+Model+Bank+on+Directory+Sandbox).
+
+More information [Do you have test environments for TPPs including a sandbox?](https://openbanking.atlassian.net/wiki/spaces/DZ/pages/22872552/Do+you+have+test+environments+for+TPPs+including+a+sandbox).
 
 ## Builds [![CircleCI](https://circleci.com/gh/banaio/openbanking.rs.svg?style=svg)](https://circleci.com/gh/banaio/openbanking.rs)
 
@@ -9,6 +14,24 @@ Connect to ForgeRock's directory.
 ## Example
 
 ```sh
+$ cargo test
+   Compiling openbanking v0.1.0 (/Users/mbana/dev/banaio/github/openbanking.rs)
+    Finished dev [unoptimized + debuginfo] target(s) in 8.30s
+     Running target/debug/deps/openbanking-0dfe4bba1bc6ed58
+
+running 9 tests
+test client::claims::tests::test_jwt_new_good ... ignored
+test client::client_credentials::tests::test_deserialize_good ... ok
+test client::accounts::tests::test_to_string_good ... ok
+test config::tests::test_read_config_bad ... ok
+test client::claims::tests::test_claims ... ok
+test client::claims::tests::test_private_claims ... ok
+test http::tests::test_default_headers ... ok
+test oidcdiscovery::tests::test_deserialize_good ... ok
+test config::tests::test_read_config_good ... ok
+
+test result: ok. 8 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out
+
 $ cargo run
    Compiling openbanking v0.1.0 (/Users/mbana/dev/banaio/github/openbanking)
     Finished dev [unoptimized + debuginfo] target(s) in 4.08s

@@ -22,3 +22,41 @@
     "x5t # S256": "5G7DWO0Omk1GxnM_PTnpq29fY3FT81EVEAIvkYii-BI ="
   }]
 }
+
+// The signing public certificate output from OpenSSL returns:
+
+// ```
+// $ openssl x509 -in signing_public.pem -noout -subject
+// subject= /C=GB/O=OpenBanking/OU=0015800001041RbAAI/CN=REfZKo7zN2IeE0X2RFGTb4
+// ```
+
+// The (old) Ozone self-service instructions, said to create Certificate DN as follows:
+
+// `C=GB,O=Ozone Financial Technology Limited,OU=3W5dnR1zsrJalClGTnBIqP,CN=7qSQVkKgSbTVR9pyjkuvZl`
+
+// So I tried this, which did not work (see the error at the end of the message):
+
+// `C=GB,O=OpenBanking,OU=0015800001041RbAAI,CN=REfZKo7zN2IeE0X2RFGTb4`
+
+// Now if I change the order to match the order returned by the error message in the API call:
+
+// `CN=REfZKo7zN2IeE0X2RFGTb4,OU=0015800001041RbAAI,O=OpenBanking,C=GB`
+
+// Basically, if I follow the (old) self-service instructions, I got the below error and there is some confusion about the order of fields in Certificate DN. Error log:
+
+// ```
+// {
+//    "Code": "UK.Ozone.ClientBindingError",
+//    "Message": "Certificate error. Certificate DN not bound to client. Client Id: d663957d-bf58-41e9-9e98-9fb5a0841a18, Client DN: C=GB,O=OpenBanking,OU=0015800001041RbAAI,CN=REfZKo7zN2IeE0X2RFGTb4, Connection Dn: CN=REfZKo7zN2IeE0X2RFGTb4,OU=0015800001041RbAAI,O=OpenBanking,C=GB",
+//    "Errors": [
+//       {
+//          "ErrorCode": "UK.Ozone.ClientBindingError",
+//          "Message": "Certificate error. Certificate DN not bound to client. Client Id: d663957d-bf58-41e9-9e98-9fb5a0841a18, Client DN: C=GB,O=OpenBanking,OU=0015800001041RbAAI,CN=REfZKo7zN2IeE0X2RFGTb4, Connection Dn: CN=REfZKo7zN2IeE0X2RFGTb4,OU=0015800001041RbAAI,O=OpenBanking,C=GB",
+//          "Path": "Authorization"
+//       }
+//    ]
+// }
+// ```
+
+// It would help if there was field in the UI that indicated what order the fields are expected to be in.
+// I also noted that if the fields in the Certificate DN were not in the expected order it would still pass the client credentials grant but later fail on the API call.

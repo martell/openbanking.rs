@@ -68,6 +68,7 @@ where
 #[cfg(test)]
 mod tests {
     use pretty_assertions::assert_eq;
+    use serde_json;
 
     #[test]
     fn test_deserialize_good() {
@@ -76,9 +77,14 @@ mod tests {
             token_type:   "Bearer".to_string(),
             expires_in:   std::time::Duration::from_secs(3600),
         };
-        let json = r#"{"access_token":"c875cc35-b712-4904-9ff1-9de9dc2b6014","token_type":"Bearer","expires_in":3600}"#;
-        let actual = serde_json::from_str::<super::ClientCredentialsGrant>(json).unwrap();
-        println!("actual={:?}, expected={:?}", actual, expected);
+        let s = r#"
+{
+    "access_token": "c875cc35-b712-4904-9ff1-9de9dc2b6014",
+    "token_type": "Bearer",
+    "expires_in": 3600
+}
+        "#;
+        let actual = serde_json::from_str::<super::ClientCredentialsGrant>(s).unwrap();
 
         assert_eq!(actual, expected);
     }

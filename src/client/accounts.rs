@@ -45,7 +45,7 @@ mod tests {
                 consent_id: "A02aff57e-80f9-4964-8548-4c9b17cfaa29".to_string(),
             },
         };
-        let json = r#"
+        let s = r#"
 {
     "Data": {
         "ConsentId": "A02aff57e-80f9-4964-8548-4c9b17cfaa29",
@@ -69,10 +69,8 @@ mod tests {
     "Risk": {}
 }
         "#;
-        let actual = serde_json::from_str::<super::OBReadConsentResponse1>(json).unwrap();
+        let actual = serde_json::from_str::<super::OBReadConsentResponse1>(s).unwrap();
         let serialized = serde_json::to_string(&expected).unwrap();
-        println!("serialized = {}", serialized);
-        println!("actual={:?}, expected={:?}", actual, expected);
 
         assert_eq!(actual, expected);
     }

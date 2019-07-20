@@ -117,15 +117,12 @@ mod tests {
             financial_id:               "<financial_id>".into(),
         };
 
-        println!("actual={:?}", actual);
         assert_eq!(actual, expected);
     }
 
     #[test]
     #[should_panic]
     fn test_read_config_bad() {
-        let actual =
-            super::Config::read("testdata/config_bad.yml").expect("testdata/config_bad.yml");
-        println!("actual={:?}", actual);
+        let _ = super::Config::read("testdata/config_bad.yml").expect("testdata/config_bad.yml");
     }
 }

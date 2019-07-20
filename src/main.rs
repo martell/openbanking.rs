@@ -1,3 +1,4 @@
+use better_panic;
 use log::info;
 
 pub mod cli;
@@ -11,6 +12,13 @@ pub mod terminal_utils;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     std::env::set_var("RUST_BACKTRACE", "1");
     std::env::set_var("RUST_LOG", "trace");
+
+    better_panic::Settings::debug()
+        .most_recent_first(true)
+        .backtrace_first(true)
+        .lineno_suffix(true)
+        .verbosity(better_panic::Verbosity::Full)
+        .install();
 
     let cli = cli::new();
     info!("cli={:?}", cli);

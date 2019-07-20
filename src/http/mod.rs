@@ -156,7 +156,6 @@ mod tests {
         expected.insert("cache-control", "no-cache".parse().unwrap());
 
         let actual = super::default_headers();
-        println!("actual={:?}, expected={:?}", actual, expected);
 
         assert_eq!(actual, expected);
     }
