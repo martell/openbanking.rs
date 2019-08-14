@@ -11,6 +11,32 @@ More information [Do you have test environments for TPPs including a sandbox?](h
 
 [`https://circleci.com/gh/banaio/openbanking.rs`](https://circleci.com/gh/banaio/openbanking.rs)
 
+## Dependencies
+
+Run these commands, with or without `sudo`:
+
+```sh
+echo -e "\e[32m Installing Go \e[0m"
+cd /tmp
+wget https://dl.google.com/go/go1.12.8.linux-armv6l.tar.gz
+sudo tar -C /usr/local -xzf go1.12.8.linux-armv6l.tar.gz
+printf '\n\nexport PATH=$PATH:/usr/local/go/bin\n\n' >> ~/.profile
+source $HOME/.profile
+echo -e "\e[32m Installing Rust \e[0m"
+curl https://sh.rustup.rs -sSf | sh
+source $HOME/.cargo/env
+mkdir -p ~/dev/rust/
+cd ~/dev/rust/
+git clone git@github.com:banaio/openbanking.rs.git
+cd openbanking.rs/
+sudo apt update -yy
+sudo apt-get install libssl-dev gcc build-essential pkg-config vim
+...
+cargo build
+...
+cargo test
+```
+
 ## Example
 
 ```sh

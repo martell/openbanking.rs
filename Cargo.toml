@@ -1,3 +1,5 @@
+# https://doc.rust-lang.org/cargo/reference/manifest.html#package-metadata
+
 [package]
 name = "openbanking"
 version = "0.1.0"
@@ -8,8 +10,9 @@ description = "Open Banking client written in Rust Programming Language."
 repository = "https://github.com/banaio/openbanking.rs"
 
 [profile.release]
-incremental = true
-debug = true
+lto = true
+debug = 1
+incremental = false
 
 # https://doc.rust-lang.org/rust-by-example/testing/dev_dependencies.html
 [dev-dependencies.pretty_assertions]
@@ -17,8 +20,6 @@ version = "0.6.1"
 
 [dependencies]
 rustls = "0.15.2"
-
-env_logger = "0.6.2"
 clap = "2.33"
 structopt = "0.2"
 term_size = "0.3.1"
@@ -37,6 +38,16 @@ url = "1.7.2"
 version = "0.4"
 features = ["std", "serde"]
 # features = ["max_level_debug", "release_max_level_warn"]
+
+[dependencies.env_logger]
+version = "0.3.0"
+
+[dependencies.pretty_env_logger]
+version = "0.3.0"
+
+[dependencies.warp]
+version = "0.1.17"
+features = ["tls"]
 
 [dependencies.serde]
 version = "1.0.95"

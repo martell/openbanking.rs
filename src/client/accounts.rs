@@ -70,7 +70,6 @@ mod tests {
 }
         "#;
         let actual = serde_json::from_str::<super::OBReadConsentResponse1>(s).unwrap();
-        let serialized = serde_json::to_string(&expected).unwrap();
 
         assert_eq!(actual, expected);
     }
